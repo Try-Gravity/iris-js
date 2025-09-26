@@ -36,14 +36,14 @@
   ],
   "author": "Iris Team",
   "license": "ISC",
-  "homepage": "https://github.com/iris-technologies/iris-js#readme",
+  "homepage": "https://github.com/Try-Gravity/iris-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iris-technologies/iris-js.git",
+    "url": "git+https://github.com/Try-Gravity/iris-js.git",
     "directory": "packages/api"
   },
   "bugs": {
-    "url": "https://github.com/iris-technologies/iris-js/issues"
+    "url": "https://github.com/Try-Gravity/iris-js/issues"
   },
   "dependencies": {
     "axios": "^1.6.0"
