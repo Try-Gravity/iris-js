@@ -1,6 +1,6 @@
 {
   "name": "@iris-technologies/react",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "React components for displaying Iris advertisements",
   "main": "dist/react/src/index.js",
   "types": "dist/react/src/index.d.ts",
