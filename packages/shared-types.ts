@@ -11,19 +11,42 @@ export interface IrisClientConfig {
 }
 
 /**
- * Parameters for getting an advertisement
+ * Bid/bids endpoint request & response types
  */
-export interface GetAdParams {
-  inputPrompt: string;
-  responsePrompt: string;
-  userId: string;
+export type Role = 'user' | 'assistant';
+export type Gender = 'male' | 'female' | 'other';
+
+export interface MessageObject {
+  role: Role;
+  content: string;
 }
 
-/**
- * Advertisement response structure
- */
-export interface AdResponse {
-  text: string;
+export interface DeviceObject {
+  ip: string;
+  country: string;
+  ua: string;
+  os?: string;
+  ifa?: string;
+}
+
+export interface UserObject {
+  uid?: string;
+  gender?: Gender;
+  age?: string;
+  keywords?: string;
+  excludedTopics?: string[];
+}
+
+export interface BidParams {
+  apiKey?: string;
+  messages: MessageObject[];
+  device?: DeviceObject;
+  user?: UserObject;
+  excludedTopics?: string[];
+}
+
+export interface BidResponse {
+  adText: string;
   impUrl?: string;
   clickUrl?: string;
   payout?: number;
@@ -44,7 +67,7 @@ export interface ApiErrorResponse {
  */
 export interface IrisAdProps {
   /** The advertisement data to display */
-  ad: AdResponse;
+  ad: BidResponse;
   /** CSS class for the container element */
   className?: string;
   /** CSS class for the text element */

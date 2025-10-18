@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { AdResponse, ApiErrorResponse } from '../../shared-types';
+import { BidParams, BidResponse, ApiErrorResponse } from '../../shared-types';
 
 /**
  * IrisClient - A client for interacting with the Iris advertising API
@@ -14,7 +14,6 @@ export class IrisClient {
     this.excludedTopics = excludedTopics;
     
     this.httpClient = axios.create({
-      // TODO: Replace with actual API endpoint
       baseURL: 'https://api.iristech.dev',
       timeout: 10000,
       headers: {
@@ -25,29 +24,31 @@ export class IrisClient {
   }
 
   /**
-   * Get a targeted advertisement based on input parameters
-   * @param inputPrompt - The input prompt context
-   * @param responsePrompt - The response prompt context  
-   * @param userId - The user identifier
-   * @returns Promise<AdResponse | null> - Advertisement data or null if no ad found
+   * Get a targeted advertisement via the bids endpoint
+   * @param params - BidParams matching the server schema
+   * @returns Promise<BidResponse | null>
    */
-  async getAd(inputPrompt: string, responsePrompt: string, userId: string): Promise<AdResponse | null> {
+  async getAd(params: BidParams): Promise<BidResponse | null> {
     try {
-      const response = await this.httpClient.post('/bids', {
-        apiKey: this.apiKey,
-        inputPrompt,
-        responsePrompt,
-        userId,
-        excludedTopics: this.excludedTopics,
-      });
+      const body: BidParams = {
+        ...params,
+        // prefer explicit apiKey in params, else default to client's apiKey
+        apiKey: params.apiKey ?? this.apiKey,
+        // supply top-level excludedTopics if not provided
+        excludedTopics: params.excludedTopics ?? this.excludedTopics,
+      };
+      const response = await this.httpClient.post('/bids', body);
 
       // Check if response contains valid ad data
-      if (response.data && response.data.text) {
+      if (response.status === 204) return null;
+
+      if (response.data && response.data.adText) {
+        const payload = response.data as BidResponse;
         return {
-          text: response.data.text,
-          impUrl: response.data.impUrl,
-          clickUrl: response.data.clickUrl,
-          payout: response.data.payout,
+          adText: payload.adText,
+          impUrl: payload.impUrl,
+          clickUrl: payload.clickUrl,
+          payout: payload.payout,
         };
       }
 

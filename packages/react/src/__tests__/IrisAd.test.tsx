@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IrisAd } from '../IrisAd';
-import type { AdResponse } from '../../../shared-types';
+import type { BidResponse } from '../../../shared-types';
 
 // Mock fetch for impression URL testing
 const mockFetch = (globalThis as any).fetch as jest.MockedFunction<typeof fetch>;
@@ -10,8 +10,8 @@ const mockFetch = (globalThis as any).fetch as jest.MockedFunction<typeof fetch>
 const mockWindowOpen = window.open as jest.MockedFunction<typeof window.open>;
 
 describe('IrisAd Component', () => {
-  const mockAd: AdResponse = {
-    text: 'Test Advertisement Text',
+  const mockAd: BidResponse = {
+    adText: 'Test Advertisement Text',
     impUrl: 'https://api.example.com/impression?id=123',
     clickUrl: 'https://api.example.com/click?id=123&redirect=https://example.com/landing',
     payout: 0.25
@@ -186,7 +186,7 @@ describe('IrisAd Component', () => {
       expect(mockWindowOpen).not.toHaveBeenCalled();
     });
 
-    it('falls back to url when clickUrl is empty string', async () => {
+    it('does nothing when clickUrl is empty string', async () => {
       const user = userEvent.setup();
       const adWithEmptyClickUrl = { ...mockAd, clickUrl: '' };
       render(<IrisAd ad={adWithEmptyClickUrl} />);
@@ -194,12 +194,8 @@ describe('IrisAd Component', () => {
       const button = screen.getByRole('button');
       await user.click(button);
       
-      // Empty string is truthy, so it uses the empty clickUrl, not the fallback
-      expect(mockWindowOpen).toHaveBeenCalledWith(
-        '',
-        '_blank',
-        'noopener,noreferrer'
-      );
+      // Empty string is falsy; should not open a new window
+      expect(mockWindowOpen).not.toHaveBeenCalled();
     });
 
     it('calls custom onButtonClick handler when provided with clickUrl value', async () => {
@@ -240,7 +236,7 @@ describe('IrisAd Component', () => {
 
   describe('Edge Cases', () => {
     it('handles ad with missing text gracefully', () => {
-      const adWithoutText = { ...mockAd, text: '' };
+      const adWithoutText = { ...mockAd, adText: '' };
       render(<IrisAd ad={adWithoutText} />);
       
       // Should still render the component structure

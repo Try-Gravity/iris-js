@@ -22,11 +22,11 @@ npm install @iris-technologies/react
 ```tsx
 import React from 'react';
 import { IrisAd } from '@iris-technologies/react';
-import type { AdResponse } from '@iris-technologies/react';
+import type { BidResponse } from '@iris-technologies/react';
 
 function MyApp() {
-  const ad: AdResponse = {
-    text: "Discover amazing products that match your interests!",
+  const ad: BidResponse = {
+    adText: "Discover amazing products that match your interests!",
     impUrl: "https://api.iris.tech/impression/abc123",  // Automatically fired on render
     clickUrl: "https://api.iris.tech/click/abc123",     // Used for click tracking
     payout: 0.25
@@ -66,7 +66,7 @@ When users click the ad button:
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `ad` | `AdResponse` | - | **Required.** The advertisement data to display |
+| `ad` | `BidResponse` | - | **Required.** The advertisement data to display |
 | `className` | `string` | - | CSS class for the container element |
 | `textClassName` | `string` | - | CSS class for the text element |
 | `buttonClassName` | `string` | - | CSS class for the button element |
@@ -74,11 +74,11 @@ When users click the ad button:
 | `onButtonClick` | `(url: string, event: MouseEvent) => void` | - | Custom click handler. If provided, overrides default behavior |
 | `show` | `boolean` | `true` | Whether to render the component |
 
-### `AdResponse` Type
+### `BidResponse` Type
 
 ```tsx
-interface AdResponse {
-  text: string;           // Ad copy to display
+interface BidResponse {
+  adText: string;         // Ad copy to display
   impUrl?: string;        // Impression tracking URL (fired automatically)
   clickUrl?: string;      // Click tracking URL (used on button click)
   payout?: number;        // Publisher payout amount
@@ -207,7 +207,7 @@ The component gracefully handles missing or invalid URLs:
 ```tsx
 // Still renders even if impression URL is missing
 const adWithoutImpression = {
-  text: "Great product!",
+  adText: "Great product!",
   // impUrl missing - component works fine
 };
 

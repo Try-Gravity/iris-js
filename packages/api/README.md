@@ -1,11 +1,11 @@
 # @iris-technologies/api
 
-A TypeScript client library for the Iris advertising API with automatic impression and click URL generation.
+A TypeScript client library for the Iris advertising API with automatic impression and click URL handling.
 
 ## Features
 
 - **Smart Ad Retrieval**: Get contextually relevant advertisements
-- **Automatic URL Generation**: Impression and click tracking URLs included
+- **Automatic URL Handling**: Impression and click tracking URLs included
 - **Error Handling**: Graceful fallbacks and comprehensive error logging
 - **TypeScript Support**: Full type safety with detailed type definitions  
 - **Configurable Topics**: Exclude unwanted ad categories
@@ -26,16 +26,20 @@ import { IrisClient } from '@iris-technologies/api';
 const client = new IrisClient('your-api-key', ['politics', 'gambling']);
 
 // Get an advertisement with tracking URLs
-const ad = await client.getAd(
-  'user looking for weather information',
-  'showing current weather conditions', 
-  'user-123'
-);
+const ad = await client.getAd({
+  messages: [
+    { role: 'user', content: 'user looking for weather information' },
+    { role: 'assistant', content: 'showing current weather conditions' }
+  ],
+  user: { uid: 'user-123' },
+  device: { ip: '1.2.3.4', country: 'US', ua: 'UA' },
+  excludedTopics: ['politics', 'gambling']
+});
 
 if (ad) {
-  console.log('Ad text:', ad.text);
-  console.log('Impression URL:', ad.impUrl);    // Auto-generated
-  console.log('Click URL:', ad.clickUrl);       // Auto-generated
+  console.log('Ad text:', ad.adText);
+  console.log('Impression URL:', ad.impUrl);
+  console.log('Click URL:', ad.clickUrl);
   console.log('Publisher payout:', ad.payout);
 } else {
   console.log('No ad available');
@@ -58,25 +62,29 @@ new IrisClient(apiKey: string, excludedTopics: string[])
 
 #### Methods
 
-##### `getAd(inputPrompt: string, responsePrompt: string, userId: string): Promise<AdResponse | null>`
+##### `getAd(params: BidParams): Promise<BidResponse | null>`
 
-Retrieves a targeted advertisement with automatic tracking URL generation.
+Retrieves a targeted advertisement with automatic tracking URL handling.
 
-**Parameters:**
-- `inputPrompt`: The user's input context (what they asked about)
-- `responsePrompt`: The assistant's response context (what you're telling them)
-- `userId`: Unique identifier for the user (for personalization)
+**Parameters (BidParams):**
+- `messages`: Array of `{ role: 'user' | 'assistant', content: string }` representing conversation history
+- `device` (optional): `{ ip: string; country: string; ua: string; os?: string; ifa?: string }`
+- `user` (optional): `{ uid?: string; gender?: 'male' | 'female' | 'other'; age?: string; keywords?: string[] }`
+- `excludedTopics` (optional): `string[]` of topics to exclude
+- `apiKey` (optional): overrides the client API key for this call
 
 **Returns:**
-- `AdResponse | null`: Advertisement object with tracking URLs, or `null` if no ad is available
+- `BidResponse | null`: Advertisement object with tracking URLs, or `null` if no ad is available (e.g., 204)
 
 **Example:**
 ```typescript
-const ad = await client.getAd(
-  'How do I learn guitar?',
-  'Here are some tips for learning guitar...',
-  'user-456'
-);
+const ad = await client.getAd({
+  messages: [
+    { role: 'user', content: 'How do I learn guitar?' },
+    { role: 'assistant', content: 'Here are some tips for learning guitar...' }
+  ],
+  user: { uid: 'user-456' }
+});
 ```
 
 ##### `updateExcludedTopics(excludedTopics: string[]): void`
@@ -96,13 +104,32 @@ const currentExclusions = client.getExcludedTopics();
 console.log('Excluding:', currentExclusions);
 ```
 
-## Response Types
+## Types
 
-### `AdResponse`
+### `BidParams`
 
 ```typescript
-interface AdResponse {
-  text: string;           // Ad copy to display to users
+type Role = 'user' | 'assistant';
+type Gender = 'male' | 'female' | 'other';
+
+interface MessageObject { role: Role; content: string }
+interface DeviceObject { ip: string; country: string; ua: string; os?: string; ifa?: string }
+interface UserObject { uid?: string; gender?: Gender; age?: string; keywords?: string[] }
+
+interface BidParams {
+  apiKey?: string;
+  messages: MessageObject[];
+  device?: DeviceObject;
+  user?: UserObject;
+  excludedTopics?: string[];
+}
+```
+
+### `BidResponse`
+
+```typescript
+interface BidResponse {
+  adText: string;         // Ad copy to display to users
   impUrl?: string;        // Impression tracking URL (fire when ad is shown)
   clickUrl?: string;      // Click tracking URL (use when ad is clicked)
   payout?: number;        // Publisher payout amount in USD
@@ -128,7 +155,13 @@ The client handles errors gracefully and logs detailed information:
 
 ```typescript
 // Network errors, HTTP errors, and invalid responses are handled automatically
-const ad = await client.getAd('context', 'response', 'user');
+const ad = await client.getAd({
+  messages: [
+    { role: 'user', content: 'context' },
+    { role: 'assistant', content: 'response' }
+  ],
+  user: { uid: 'user' }
+});
 
 // Always check for null response
 if (!ad) {
@@ -149,7 +182,13 @@ if (userPreferences.excludeGambling) {
 }
 
 // Get ad with updated exclusions
-const ad = await client.getAd(context, response, userId);
+const ad = await client.getAd({
+  messages: [
+    { role: 'user', content: context },
+    { role: 'assistant', content: response }
+  ],
+  user: { uid: userId }
+});
 ```
 
 ### Integration with React Component

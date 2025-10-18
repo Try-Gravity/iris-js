@@ -1,7 +1,7 @@
 export { IrisClient } from './IrisClient';
 export type { 
   IrisClientConfig, 
-  GetAdParams, 
-  AdResponse, 
+  BidParams, 
+  BidResponse, 
   ApiErrorResponse 
 } from '../../shared-types';

@@ -47,7 +47,7 @@ export const IrisAd: React.FC<IrisAdProps> = ({
   return (
     <div className={className} data-iris-ad="container">
       <p className={textClassName} data-iris-ad="text">
-        {ad.text}
+        {ad.adText}
       </p>
       <button
         type="button"

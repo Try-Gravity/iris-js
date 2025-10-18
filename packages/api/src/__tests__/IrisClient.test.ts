@@ -50,14 +50,19 @@ describe('IrisClient', () => {
   });
 
   describe('getAd', () => {
-    const mockInputPrompt = 'What is the weather like?';
-    const mockResponsePrompt = 'The weather is sunny today.';
-    const mockUserId = 'user-123';
+    const mockMessages = [
+      { role: 'user' as const, content: 'What is the weather like?' },
+      { role: 'assistant' as const, content: 'The weather is sunny today.' },
+    ];
+    const mockParams = {
+      messages: mockMessages,
+      user: { uid: 'user-123' },
+    };
 
-    it('returns AdResponse with impression and click URLs when API call succeeds', async () => {
+    it('returns BidResponse with impression and click URLs when API call succeeds', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Try our weather app!',
+          adText: 'Try our weather app!',
           impUrl: 'https://api.iristech.dev/impression?id=abc123',
           clickUrl: 'https://api.iristech.dev/click?id=abc123&redirect=https://weather-app.com',
           payout: 0.15
@@ -71,18 +76,16 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(mockPost).toHaveBeenCalledWith('/bids', {
         apiKey: mockApiKey,
-        inputPrompt: mockInputPrompt,
-        responsePrompt: mockResponsePrompt,
-        userId: mockUserId,
+        ...mockParams,
         excludedTopics: mockExcludedTopics,
       });
 
       expect(result).toEqual({
-        text: 'Try our weather app!',
+        adText: 'Try our weather app!',
         impUrl: 'https://api.iristech.dev/impression?id=abc123',
         clickUrl: 'https://api.iristech.dev/click?id=abc123&redirect=https://weather-app.com',
         payout: 0.15
@@ -92,7 +95,7 @@ describe('IrisClient', () => {
     it('handles response with missing impression URL', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Try our weather app!',
+          adText: 'Try our weather app!',
           // impUrl is missing
           clickUrl: 'https://api.iristech.dev/click?id=abc123&redirect=https://weather-app.com',
           payout: 0.15
@@ -106,10 +109,10 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toEqual({
-        text: 'Try our weather app!',
+        adText: 'Try our weather app!',
         impUrl: undefined,
         clickUrl: 'https://api.iristech.dev/click?id=abc123&redirect=https://weather-app.com',
         payout: 0.15
@@ -119,7 +122,7 @@ describe('IrisClient', () => {
     it('handles response with missing click URL', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Try our weather app!',
+          adText: 'Try our weather app!',
           impUrl: 'https://api.iristech.dev/impression?id=abc123',
           // clickUrl is missing
           payout: 0.15
@@ -133,10 +136,10 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toEqual({
-        text: 'Try our weather app!',
+        adText: 'Try our weather app!',
         impUrl: 'https://api.iristech.dev/impression?id=abc123',
         clickUrl: undefined,
         payout: 0.15
@@ -146,7 +149,7 @@ describe('IrisClient', () => {
     it('handles response with null impression and click URLs', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Try our weather app!',
+          adText: 'Try our weather app!',
           impUrl: null,
           clickUrl: null,
           payout: 0.15
@@ -160,10 +163,10 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toEqual({
-        text: 'Try our weather app!',
+        adText: 'Try our weather app!',
         impUrl: null,
         clickUrl: null,
         payout: 0.15
@@ -173,7 +176,7 @@ describe('IrisClient', () => {
     it('handles response with empty string URLs', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Try our weather app!',
+          adText: 'Try our weather app!',
           impUrl: '',
           clickUrl: '',
           payout: 0.15
@@ -187,10 +190,10 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toEqual({
-        text: 'Try our weather app!',
+        adText: 'Try our weather app!',
         impUrl: '',
         clickUrl: '',
         payout: 0.15
@@ -200,7 +203,7 @@ describe('IrisClient', () => {
     it('returns null when response is missing required fields', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          // Missing text
+          // Missing adText
           impUrl: 'https://api.iristech.dev/impression?id=abc123',
           clickUrl: 'https://api.iristech.dev/click?id=abc123',
           payout: 0.15
@@ -214,7 +217,7 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
     });
@@ -231,7 +234,7 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
     });
@@ -248,16 +251,20 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
     });
   });
 
   describe('Error Handling', () => {
-    const mockInputPrompt = 'What is the weather like?';
-    const mockResponsePrompt = 'The weather is sunny today.';
-    const mockUserId = 'user-123';
+    const mockParams = {
+      messages: [
+        { role: 'user' as const, content: 'What is the weather like?' },
+        { role: 'assistant' as const, content: 'The weather is sunny today.' },
+      ],
+      user: { uid: 'user-123' },
+    };
 
     beforeEach(() => {
       // Mock console.error to avoid cluttering test output
@@ -278,7 +285,7 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockRejectedValue(networkError);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
       expect(console.error).toHaveBeenCalledWith(
@@ -309,7 +316,7 @@ describe('IrisClient', () => {
       // Mock axios.isAxiosError
       mockedAxios.isAxiosError.mockReturnValue(true);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
       expect(console.error).toHaveBeenCalledWith(
@@ -339,7 +346,7 @@ describe('IrisClient', () => {
       // Mock axios.isAxiosError
       mockedAxios.isAxiosError.mockReturnValue(true);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
       expect(console.error).toHaveBeenCalledWith(
@@ -360,7 +367,7 @@ describe('IrisClient', () => {
       // Mock axios.isAxiosError to return false
       mockedAxios.isAxiosError.mockReturnValue(false);
 
-      const result = await client.getAd(mockInputPrompt, mockResponsePrompt, mockUserId);
+      const result = await client.getAd(mockParams);
 
       expect(result).toBeNull();
       expect(console.error).toHaveBeenCalledWith(
@@ -406,13 +413,21 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      await client.getAd('input', 'response', 'user-123');
+      await client.getAd({
+        messages: [
+          { role: 'user', content: 'input' },
+          { role: 'assistant', content: 'response' },
+        ],
+        user: { uid: 'user-123' },
+      });
 
       expect(mockPost).toHaveBeenCalledWith('/bids', {
         apiKey: mockApiKey,
-        inputPrompt: 'input',
-        responsePrompt: 'response',
-        userId: 'user-123',
+        messages: [
+          { role: 'user', content: 'input' },
+          { role: 'assistant', content: 'response' },
+        ],
+        user: { uid: 'user-123' },
         excludedTopics: newExcludedTopics,
       });
     });
@@ -423,8 +438,7 @@ describe('IrisClient', () => {
       const longUrl = 'https://example.com/' + 'x'.repeat(2000);
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Test ad',
-          url: 'https://example.com',
+          adText: 'Test ad',
           impUrl: longUrl,
           clickUrl: longUrl,
           payout: 0.25
@@ -438,11 +452,16 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd('input', 'response', 'user-123');
+      const result = await client.getAd({
+        messages: [
+          { role: 'user', content: 'input' },
+          { role: 'assistant', content: 'response' },
+        ],
+        user: { uid: 'user-123' },
+      });
 
       expect(result).toEqual({
-        text: 'Test ad',
-        url: 'https://example.com',
+        adText: 'Test ad',
         impUrl: longUrl,
         clickUrl: longUrl,
         payout: 0.25
@@ -453,8 +472,7 @@ describe('IrisClient', () => {
       const urlWithSpecialChars = 'https://example.com/path?param=value&other=test%20data';
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Test ad',
-          url: 'https://example.com',
+          adText: 'Test ad',
           impUrl: urlWithSpecialChars,
           clickUrl: urlWithSpecialChars,
           payout: 0.25
@@ -468,11 +486,16 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd('input', 'response', 'user-123');
+      const result = await client.getAd({
+        messages: [
+          { role: 'user', content: 'input' },
+          { role: 'assistant', content: 'response' },
+        ],
+        user: { uid: 'user-123' },
+      });
 
       expect(result).toEqual({
-        text: 'Test ad',
-        url: 'https://example.com',
+        adText: 'Test ad',
         impUrl: urlWithSpecialChars,
         clickUrl: urlWithSpecialChars,
         payout: 0.25
@@ -482,8 +505,7 @@ describe('IrisClient', () => {
     it('handles zero payout value', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Free ad',
-          url: 'https://example.com',
+          adText: 'Free ad',
           impUrl: 'https://api.iristech.dev/impression?id=123',
           clickUrl: 'https://api.iristech.dev/click?id=123',
           payout: 0
@@ -497,11 +519,16 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd('input', 'response', 'user-123');
+      const result = await client.getAd({
+        messages: [
+          { role: 'user', content: 'input' },
+          { role: 'assistant', content: 'response' },
+        ],
+        user: { uid: 'user-123' },
+      });
 
       expect(result).toEqual({
-        text: 'Free ad',
-        url: 'https://example.com',
+        adText: 'Free ad',
         impUrl: 'https://api.iristech.dev/impression?id=123',
         clickUrl: 'https://api.iristech.dev/click?id=123',
         payout: 0
@@ -511,8 +538,7 @@ describe('IrisClient', () => {
     it('handles negative payout value', async () => {
       const mockApiResponse: AxiosResponse = {
         data: {
-          text: 'Test ad',
-          url: 'https://example.com',
+          adText: 'Test ad',
           impUrl: 'https://api.iristech.dev/impression?id=123',
           clickUrl: 'https://api.iristech.dev/click?id=123',
           payout: -0.1
@@ -526,11 +552,16 @@ describe('IrisClient', () => {
       const mockPost = client['httpClient'].post as jest.MockedFunction<any>;
       mockPost.mockResolvedValue(mockApiResponse);
 
-      const result = await client.getAd('input', 'response', 'user-123');
+      const result = await client.getAd({
+        messages: [
+          { role: 'user', content: 'input' },
+          { role: 'assistant', content: 'response' },
+        ],
+        user: { uid: 'user-123' },
+      });
 
       expect(result).toEqual({
-        text: 'Test ad',
-        url: 'https://example.com',
+        adText: 'Test ad',
         impUrl: 'https://api.iristech.dev/impression?id=123',
         clickUrl: 'https://api.iristech.dev/click?id=123',
         payout: -0.1

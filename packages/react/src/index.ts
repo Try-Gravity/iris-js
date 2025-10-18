@@ -1,2 +1,2 @@
 export { IrisAd } from './IrisAd';
-export type { IrisAdProps, AdResponse } from '../../shared-types';
+export type { IrisAdProps, BidResponse } from '../../shared-types';
