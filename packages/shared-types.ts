@@ -34,7 +34,6 @@ export interface UserObject {
   gender?: Gender;
   age?: string;
   keywords?: string;
-  excludedTopics?: string[];
 }
 
 export interface BidParams {
